@@ -14,13 +14,13 @@ fi
 
 clean() {
     $DOCKER_COMPOSE down --remove-orphans --volumes || true
-    rm -Rf "${CURRENT_DIR}/workspace/html/shop" || true
+    sudo rm -Rf "${CURRENT_DIR}/workspace/html/shop" || true
     mkdir -p "${CURRENT_DIR}/workspace/html" || true
     rm -Rf "${CURRENT_DIR}/output" || true
     mkdir -p "${CURRENT_DIR}/output" || true
 }
 
-install_opencart_src() {
+unzip_opencart_src() {
     TEMP_DIR=$(mktemp -d)
     curl -Ls "${OPENCART_DOWNLOAD_URL}" -o "${TEMP_DIR}/opencart.zip"
     unzip "${TEMP_DIR}/opencart.zip" -d "${TEMP_DIR}"
@@ -31,7 +31,7 @@ start_containers() {
     $DOCKER_COMPOSE up --build --detach --wait
 }
 
-install_opencart() {
+run_opencart_cli_installer() {
     $DOCKER_COMPOSE exec web php /var/www/html/shop/install/cli_install.php install \
         --db_hostname database \
         --db_username opencart \
@@ -55,12 +55,17 @@ dump_database() {
 
 run() {
     clean
-    install_opencart_src
+    unzip_opencart_src
     start_containers
+    
+    run_opencart_cli_installer
 
-    install_opencart
+    #install_sebs_extensions
+    #apply_sebs_patches
+
     zip_opencart
     dump_database
+    #push_to_prod
 }
 
 run
