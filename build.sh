@@ -6,14 +6,14 @@ CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 OPENCART_DOWNLOAD_URL="https://github.com/opencart/opencart/releases/download/3.0.4.0/opencart-3.0.4.0.zip"
 
-if docker compose version > /dev/null 2>&1; then
+if docker compose version >/dev/null 2>&1; then
     DOCKER_COMPOSE="docker compose"
 else
     DOCKER_COMPOSE="docker-compose"
 fi
 
-
 clean() {
+    $DOCKER_COMPOSE down --remove-orphans --volumes || true
     rm -Rf "${CURRENT_DIR}/workspace/html/shop" || true
     mkdir -p "${CURRENT_DIR}/workspace/html" || true
     rm -Rf "${CURRENT_DIR}/output" || true
@@ -28,7 +28,7 @@ install_opencart_src() {
 }
 
 start_containers() {
-    $DOCKER_COMPOSE up -d --wait
+    $DOCKER_COMPOSE up --build --detach --wait
 }
 
 install_opencart() {
@@ -50,9 +50,8 @@ zip_opencart() {
 }
 
 dump_database() {
-    $DOCKER_COMPOSE exec database sh -c 'mysqldump -u root -popencart opencart' > "${CURRENT_DIR}/output/opencart.sql"
+    $DOCKER_COMPOSE exec database sh -c 'mysqldump -u root -popencart opencart' >"${CURRENT_DIR}/output/opencart.sql"
 }
-
 
 run() {
     clean

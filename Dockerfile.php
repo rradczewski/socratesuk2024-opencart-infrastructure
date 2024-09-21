@@ -1,8 +1,11 @@
 FROM php:8-apache
 
-RUN apt-get update && apt-get install -y \
-    libfreetype6-dev \
-    zlib1g-dev
+RUN apt-get update
+
 RUN a2enmod rewrite
 RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
-RUN docker-php-ext-install gd && docker-php-ext-enable gd
+
+RUN apt-get install -y \
+    zlib1g-dev  libpng-dev libjpeg-dev
+RUN docker-php-ext-configure gd --with-jpeg && \
+    docker-php-ext-install gd
