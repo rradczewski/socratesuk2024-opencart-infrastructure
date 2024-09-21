@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+set -euxo pipefail
+
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+OPENCART_DOWNLOAD_URL="https://github.com/opencart/opencart/releases/download/3.0.4.0/opencart-3.0.4.0.zip"
+
+if docker compose version > /dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+else
+    DOCKER_COMPOSE="docker-compose"
+fi
+
+
+clean() {
+    rm -Rf "${CURRENT_DIR}/workspace/html/shop" || true
+    mkdir -p "${CURRENT_DIR}/workspace/html" || true
+}
+
+install_opencart_src() {
+    TEMP_DIR=$(mktemp -d)
+    curl -Ls "${OPENCART_DOWNLOAD_URL}" -o "${TEMP_DIR}/opencart.zip"
+    unzip "${TEMP_DIR}/opencart.zip" -d "${TEMP_DIR}"
+    mv "${TEMP_DIR}/upload/" "${CURRENT_DIR}/workspace/html/shop"
+}
+
+start_containers() {
+    $DOCKER_COMPOSE up -d --wait
+}
+
+install_opencart() {
+    $DOCKER_COMPOSE exec web php /var/www/html/shop/install/cli_install.php install \
+        --db_hostname database \
+        --db_username opencart \
+        --db_password opencart \
+        --db_database opencart \
+        --db_driver mysqli \
+        --db_port 3306 \
+        --username admin \
+        --password admin \
+        --email youremail@example.com \
+        --http_server http://localhost:8080/shop/
+}
+
+
+run() {
+    clean
+    install_opencart_src
+    start_containers
+
+    install_opencart
+}
+
+run
