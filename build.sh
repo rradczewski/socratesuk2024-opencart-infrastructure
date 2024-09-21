@@ -16,6 +16,8 @@ fi
 clean() {
     rm -Rf "${CURRENT_DIR}/workspace/html/shop" || true
     mkdir -p "${CURRENT_DIR}/workspace/html" || true
+    rm -Rf "${CURRENT_DIR}/output" || true
+    mkdir -p "${CURRENT_DIR}/output" || true
 }
 
 install_opencart_src() {
@@ -43,6 +45,14 @@ install_opencart() {
         --http_server http://localhost:8080/shop/
 }
 
+zip_opencart() {
+    zip -r "${CURRENT_DIR}/output/opencart.zip" "${CURRENT_DIR}/workspace/html/shop"
+}
+
+dump_database() {
+    $DOCKER_COMPOSE exec database sh -c 'mysqldump -u root -popencart opencart' > "${CURRENT_DIR}/output/opencart.sql"
+}
+
 
 run() {
     clean
@@ -50,6 +60,8 @@ run() {
     start_containers
 
     install_opencart
+    zip_opencart
+    dump_database
 }
 
 run
